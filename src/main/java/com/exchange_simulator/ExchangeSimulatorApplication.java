@@ -1,4 +1,4 @@
-package com.example.exchange_simulator;
+package com.exchange_simulator;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

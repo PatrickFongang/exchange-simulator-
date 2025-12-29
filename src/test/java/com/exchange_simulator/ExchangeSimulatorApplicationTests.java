@@ -1,4 +1,4 @@
-package com.example.exchange_simulator;
+package com.exchange_simulator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
