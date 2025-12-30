@@ -11,11 +11,9 @@ import java.util.List;
         @Index(name = "idx_user_email", columnList = "email")
 })
 public class User extends Base{
-    public User() {}
-
     @Getter
     @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
-    private List<Position> positions = new ArrayList<>();
+    private final List<Position> positions = new ArrayList<>();
 
     @Getter
     @Column(nullable = false)
@@ -24,4 +22,16 @@ public class User extends Base{
     @Getter
     @Column(nullable = false)
     private String email;
+
+    public User() {}
+
+    public User(String name, String email){
+        this.name = name;
+        this.email = email;
+    }
+
+    @Override
+    public String toString() {
+        return "User " + name + " with email = " + email;
+    }
 }
