@@ -3,12 +3,20 @@ package com.exchange_simulator.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
 @Table(name="positions")
 public class Position extends Base{
     public Position() {}
+
+    public Position(String token, BigDecimal quantity, BigDecimal buyPrice, User user){
+        this.token = token;
+        this.quantity = quantity;
+        this.buyPrice = buyPrice;
+        this.user = user;
+    }
 
     @Getter
     @ManyToOne(fetch = FetchType.LAZY)
@@ -21,11 +29,11 @@ public class Position extends Base{
 
     @Getter
     @Column(nullable = false)
-    private Double quantity;
+    private BigDecimal quantity;
 
     @Getter
     @Column(nullable = false)
-    private Double buyPrice;
+    private BigDecimal buyPrice;
 
     @Getter
     private Instant closedAt;
