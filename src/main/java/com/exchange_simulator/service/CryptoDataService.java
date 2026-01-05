@@ -1,5 +1,6 @@
 package com.exchange_simulator.service;
 
+import lombok.RequiredArgsConstructor;
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;

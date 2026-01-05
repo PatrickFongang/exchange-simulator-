@@ -1,5 +1,6 @@
 package com.exchange_simulator.service;
 
+import com.exchange_simulator.dto.position.PositionBuyRequestDto;
 import com.exchange_simulator.dto.position.PositionResponseDto;
 import com.exchange_simulator.entity.Position;
 import com.exchange_simulator.entity.User;
@@ -17,17 +18,18 @@ import java.util.List;
 public class PositionService {
     private final PositionRepository positionRepository;
     private final UserRepository userRepository;
+    private final CryptoDataService cryptoDataService;
 
     @Transactional
-    public Position buy(Long userId, String token, BigDecimal quantity, BigDecimal buyPrice) {
-        User user = userRepository.findById(userId)
+    public Position buy(PositionBuyRequestDto dto) {
+        User user = userRepository.findById(dto.getId())
                 .orElseThrow(() -> new RuntimeException("user not found"));
-        Position newPosition = new Position(token, quantity, buyPrice, user);
-        positionRepository.save(newPosition);
-        return newPosition;
+        var ticker = cryptoDataService.getTicker(dto.getToken(),"USDT");
+        Position newPosition = new Position(dto.getToken(), dto.getQuantity(), ticker.getLast(), user);
+        return positionRepository.save(newPosition);
     }
-    public List<Position> getPortfolio(Long userId) {
-        return positionRepository.findAllByUserId(userId);
+    public List<PositionResponseDto> getPortfolio(Long userId) {
+        return positionRepository.findAllByUserId(userId).stream().map(PositionService::getDto).toList();
     }
 
     public static PositionResponseDto getDto(Position position){
