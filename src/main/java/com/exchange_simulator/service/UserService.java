@@ -42,7 +42,8 @@ public class UserService {
                 user.getUpdatedAt(),
                 user.getCreatedAt(),
                 user.getName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getFunds()
         );
     }
 }

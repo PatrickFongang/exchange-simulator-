@@ -2,6 +2,7 @@ package com.exchange_simulator.controller;
 
 import com.exchange_simulator.dto.user.UserCreateRequestDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
+import com.exchange_simulator.exceptionHandler.exceptions.UserNotFoundException;
 import com.exchange_simulator.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +31,7 @@ public class UserController {
         var user = userService.getUserById(id);
         return user
                 .map(value -> ResponseEntity.ok().body(UserService.getDto(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @PostMapping

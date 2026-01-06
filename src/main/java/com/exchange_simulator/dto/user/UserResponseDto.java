@@ -1,18 +1,19 @@
 package com.exchange_simulator.dto.user;
 
-import lombok.Value;
+import com.exchange_simulator.entity.User;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
- * DTO for {@link com.exchange_simulator.entity.User}
+ * DTO for {@link User}
  */
-@Value
-public class UserResponseDto implements Serializable {
-    Long id;
-    Instant updatedAt;
-    Instant createdAt;
-    String name;
-    String email;
-}
+public record UserResponseDto(
+        Long id,
+        Instant updatedAt,
+        Instant createdAt,
+        String name,
+        String email,
+        BigDecimal funds) implements Serializable
+{}

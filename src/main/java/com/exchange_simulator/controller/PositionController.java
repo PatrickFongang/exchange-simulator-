@@ -1,12 +1,12 @@
 package com.exchange_simulator.controller;
 
-import com.exchange_simulator.dto.position.PositionBuyRequestDto;
+import com.exchange_simulator.dto.position.PositionRequestDto;
+import com.exchange_simulator.dto.position.PositionBuyResponseDto;
 import com.exchange_simulator.dto.position.PositionResponseDto;
+import com.exchange_simulator.dto.position.PositionSellResponseDto;
 import com.exchange_simulator.entity.Position;
-import com.exchange_simulator.service.CryptoDataService;
 import com.exchange_simulator.service.PositionService;
 import lombok.RequiredArgsConstructor;
-import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -24,12 +24,21 @@ public class PositionController {
         return positionService.getPortfolio(userId);
     }
     @PostMapping("/{userId}/buy")
-    public PositionResponseDto buy(
+    public PositionBuyResponseDto buy(
             @PathVariable Long userId,
-            @RequestBody PositionBuyRequestDto positionBuyRequestDto
+            @RequestBody PositionRequestDto positionRequestDto
             ) {
-        positionBuyRequestDto.setId(userId);
-        var position = positionService.buy(positionBuyRequestDto);
-        return PositionService.getDto(position);
+        positionRequestDto.setUserId(userId);
+        var position = positionService.buy(positionRequestDto);
+        return new PositionBuyResponseDto(position.getToken(), positionRequestDto.getQuantity(), position.getBuyPrice());
+    }
+    @PostMapping("/{userId}/sell")
+    public PositionSellResponseDto sell(
+            @PathVariable Long userId,
+            @RequestBody PositionRequestDto positionRequestDto
+    ){
+        positionRequestDto.setUserId(userId);
+        var position = positionService.sell(positionRequestDto);
+        return positionService.getSellDto(position, positionRequestDto.getQuantity());
     }
 }

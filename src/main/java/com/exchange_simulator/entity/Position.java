@@ -37,4 +37,9 @@ public class Position extends Base{
 
     @Getter
     private Instant closedAt;
+
+    @Override
+    public String toString() {
+        return quantity + " of " + token;
+    }
 }

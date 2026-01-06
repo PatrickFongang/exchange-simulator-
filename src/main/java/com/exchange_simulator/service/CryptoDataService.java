@@ -8,8 +8,10 @@ import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 @Service
 public class CryptoDataService {
@@ -20,7 +22,12 @@ public class CryptoDataService {
         this.marketDataService = exchange.getMarketDataService();
     }
 
-    public Ticker getTicker(String base, String counter) {
+    public BigDecimal getPrice(String token){
+        var ticker = getTicker(token, "USDT");
+        return ticker.getBid();
+    }
+
+    private Ticker getTicker(String base, String counter) {
         try {
             return marketDataService.getTicker(new CurrencyPair(base, counter));
         } catch (IOException e) {
@@ -34,4 +41,5 @@ public class CryptoDataService {
             throw new RuntimeException("OrderBook error", e);
         }
     }
+
 }
