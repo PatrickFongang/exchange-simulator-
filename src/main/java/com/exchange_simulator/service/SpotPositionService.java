@@ -11,6 +11,7 @@ import com.exchange_simulator.exceptionHandler.exceptions.SpotPositionNotFoundEx
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +34,7 @@ public class SpotPositionService {
 
         spotPositionRepository.saveAndFlush(position);
 
-        spotPositionRepository.updateAvgBuyPriceByUserAndPositionId(order.getId(), position.getId(), order.getToken());
+        spotPositionRepository.updateAvgBuyPriceByUserAndPositionId(order.getUser().getId(), position.getId(), order.getToken());
     }
 
     public void handleSell(Order order) {
@@ -76,6 +77,12 @@ public class SpotPositionService {
     public Optional<SpotPosition> findPositionByToken(User user, String token) {
         var positions = spotPositionRepository.findAllByUserIdWithLock(user.getId());
         return positions.stream().filter(p -> p.getToken().equals(token)).findFirst();
+    }
+
+    @Transactional
+    public void deletePosition(User user, String token) {
+        var position = findPositionByToken(user, token).get();
+        spotPositionRepository.delete(position);
     }
     private SpotPosition handlePosition(String token, BigDecimal quantity, BigDecimal tokenPrice, User user) {
         Optional<SpotPosition> position = findPositionByToken(user, token);

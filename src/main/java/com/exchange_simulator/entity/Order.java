@@ -18,7 +18,7 @@ public class Order extends Base{
     public Order(String token, BigDecimal quantity, BigDecimal tokenPrice,
                  BigDecimal orderValue, User user, TransactionType transactionType,
                  OrderType orderType, Instant closedAt) {
-        this.token = token;
+        this.token = token.toLowerCase();
         this.quantity = quantity;
         this.tokenPrice = tokenPrice;
         this.orderValue = orderValue;

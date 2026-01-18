@@ -148,6 +148,8 @@ public class LimitOrderService extends OrderService {
         user.setFunds(user.getFunds().add(order.getOrderValue()));
 
         orderRepository.save(order);
+
+        spotPositionService.deletePosition(order.getUser(), order.getToken());
     }
 
 
