@@ -9,12 +9,18 @@ import org.springframework.data.jpa.repository.Query;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query(" select o from Order o where o.user.id = :userId " +
             " order by o.createdAt desc")
     List<Order> findAllByUserId(Long userId);
+
+    @Query("select o from Order o " +
+            " where o.user.id = :userId " +
+            " and o.id = :orderId")
+    Optional<Order> findByOrderAndUserId(Long userId, Long orderId);
     @Query(" select o from Order o where o.user.id = :userId " +
             " and o.transactionType = :transactionType " +
             " order by o.createdAt desc")

@@ -5,6 +5,7 @@ import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.entity.SpotPosition;
 import com.exchange_simulator.entity.User;
+import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.exceptionHandler.exceptions.NotEnoughResourcesException;
 import com.exchange_simulator.exceptionHandler.exceptions.SpotPositionNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
@@ -46,7 +47,7 @@ public class SpotPositionService {
         ownedTokens = ownedTokens.subtract(order.getQuantity());
         position.get().setQuantity(ownedTokens);
 
-        if (ownedTokens.compareTo(BigDecimal.ZERO) == 0) {
+        if (ownedTokens.compareTo(BigDecimal.ZERO) == 0 && order.getOrderType() == OrderType.MARKET) {
             spotPositionRepository.delete(position.get());
         } else {
             spotPositionRepository.save(position.get());
@@ -72,7 +73,7 @@ public class SpotPositionService {
         );
     }
 
-    private Optional<SpotPosition> findPositionByToken(User user, String token) {
+    public Optional<SpotPosition> findPositionByToken(User user, String token) {
         var positions = spotPositionRepository.findAllByUserIdWithLock(user.getId());
         return positions.stream().filter(p -> p.getToken().equals(token)).findFirst();
     }

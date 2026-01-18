@@ -27,13 +27,13 @@ public class MarketOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var order = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
-                orderValue, user, TransactionType.BUY, OrderType.MARKET, Instant.now());
+        var order = orderRepository.save (new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+                orderValue, user, TransactionType.BUY, OrderType.MARKET, Instant.now()));
 
         spotPositionService.handleBuy(order);
 
         user.setFunds(user.getFunds().subtract(orderValue));
-        return orderRepository.save(order);
+        return order;
     }
 
     @Transactional

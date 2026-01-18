@@ -6,7 +6,9 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.enums.TransactionType;
+import com.exchange_simulator.exceptionHandler.exceptions.OrderNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
+import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -16,29 +18,32 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 @Service
 public class LimitOrderService extends OrderService {
+    private final SpotPositionRepository spotPositionRepository;
     CryptoWebSocketService cryptoWebSocketService;
 
     record QueuePair(PriorityBlockingQueue<Order> buy, PriorityBlockingQueue<Order> sell) {}
     Map<String, QueuePair> orderQueues = new ConcurrentHashMap<>();
-
+    Set<Long> cancelledOrders = ConcurrentHashMap.newKeySet();
     Map<String, Runnable> listenerCleaners = new ConcurrentHashMap<>();
 
     public LimitOrderService(OrderRepository orderRepository,
                               UserRepository userRepository,
                               CryptoDataService cryptoDataService,
                               SpotPositionService spotPositionService,
-                              CryptoWebSocketService cryptoWebSocketService
-                             )
+                              CryptoWebSocketService cryptoWebSocketService,
+                             SpotPositionRepository spotPositionRepository)
     {
         // fetch db into order queues
 
         this.cryptoWebSocketService = cryptoWebSocketService;
         super(orderRepository, userRepository, cryptoDataService, spotPositionService);
+        this.spotPositionRepository = spotPositionRepository;
     }
 
     private void addToQueue(Order order){
@@ -74,17 +79,19 @@ public class LimitOrderService extends OrderService {
         while(!buyQueue.isEmpty() && buyQueue.peek().getTokenPrice().compareTo(price) >= 0){
             var order = buyQueue.poll();
 
-            // optional funds return
-            System.out.println("Filling buy order " + order.getId());
-            this.finalizeBuyOrder(order);
+            if(!cancelledOrders.contains(order.getId())) {
+                System.out.println("Filling buy order " + order.getId());
+                this.finalizeBuyOrder(order);
+            }else cancelledOrders.remove(order.getId());
         }
 
         while(!sellQueue.isEmpty() && sellQueue.peek().getTokenPrice().compareTo(price) <= 0){
             var order = sellQueue.poll();
 
-            // optional funds return
-            System.out.println("Filling sell order " + order.getId());
-            this.finalizeSellOrder(order);
+            if(!cancelledOrders.contains(order.getId())) {
+                System.out.println("Filling sell order " + order.getId());
+                this.finalizeSellOrder(order);
+            }else cancelledOrders.remove(order.getId());
         }
 
         if(buyQueue.isEmpty() && sellQueue.isEmpty() && listenerCleaners.containsKey(event.symbol())){
@@ -100,7 +107,8 @@ public class LimitOrderService extends OrderService {
         var tokenPrice = data.tokenPrice();
 
         user.setFunds(user.getFunds().subtract(orderValue));
-        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice, orderValue, user, TransactionType.BUY, OrderType.LIMIT, null);
+        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+                orderValue, user, TransactionType.BUY, OrderType.LIMIT, null);
 
         addToQueue(newOrder);
 
@@ -114,7 +122,8 @@ public class LimitOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice, orderValue, user, TransactionType.SELL, OrderType.LIMIT, null);
+        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+                orderValue, user, TransactionType.SELL, OrderType.LIMIT, null);
         spotPositionService.handleSell(newOrder);
 
         addToQueue(newOrder);
@@ -167,7 +176,32 @@ public class LimitOrderService extends OrderService {
                 .map(this::getDto)
                 .toList();
     }
-    /*
-        TODO: cancelLimitOrder method, processPendingLimitOrders method
-     */
+
+    @Transactional
+    public void cancelSellOrder(Order order)
+    {
+        cancelledOrders.add(order.getId());
+
+        var position = spotPositionService.findPositionByToken(order.getUser(), order.getToken()).get();
+        position.setQuantity(position.getQuantity().add(order.getQuantity()));
+        spotPositionRepository.save(position);
+
+        orderRepository.delete(order);
+        for(var i : cancelledOrders)
+            System.out.println(i);
+    }
+    @Transactional
+    public void cancelBuyOrder(Order order)
+    {
+        cancelledOrders.add(order.getId());
+
+        var user = order.getUser();
+        user.setFunds(user.getFunds().add(order.getOrderValue()));
+        userRepository.save(user);
+
+
+        orderRepository.delete(order);
+        for(var i : cancelledOrders)
+            System.out.println(i);
+    }
 }

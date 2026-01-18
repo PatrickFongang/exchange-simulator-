@@ -58,6 +58,13 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST
         );
     }
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleOrderNotFound(ExchangeException ex, HttpServletRequest request) {
+        return new ResponseEntity<>(
+                buildResponse(HttpStatus.BAD_REQUEST, ex, request),
+                HttpStatus.BAD_REQUEST
+        );
+    }
 
     private ErrorResponseDto buildResponse(HttpStatus status, Exception ex, HttpServletRequest request) {
         return new ErrorResponseDto(

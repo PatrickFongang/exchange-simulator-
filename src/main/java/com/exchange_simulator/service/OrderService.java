@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -84,6 +85,9 @@ public class OrderService {
                 order.getClosedAt()
         );
     }
+    public Optional<Order> findByUserAndOrderId(Long userId, Long orderId){
+        return orderRepository.findByOrderAndUserId(userId, orderId);
+    }
     protected void validateQuantity(BigDecimal quantity){
         if(quantity.compareTo(BigDecimal.ZERO) <= 0)
             throw new BadQuantityException(quantity);
@@ -100,5 +104,6 @@ public class OrderService {
     protected User findUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     }
+
     protected record OrderFinalization(User user, BigDecimal orderValue, BigDecimal tokenPrice) {}
 }
