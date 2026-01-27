@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.stream.Stream;
 
 @Service
 public class LimitOrderService extends OrderService {
@@ -44,6 +45,31 @@ public class LimitOrderService extends OrderService {
         this.cryptoWebSocketService = cryptoWebSocketService;
         super(orderRepository, userRepository, cryptoDataService, spotPositionService);
         this.spotPositionRepository = spotPositionRepository;
+
+        syncOrdersToQueue();
+    }
+
+    public Stream<Order> getBuyActiveOrdersQueue(String symbol){
+        if(orderQueues.containsKey(symbol)){
+            return orderQueues.get(symbol).buy.stream()
+                    .filter(o -> !cancelledOrders.contains(o.getId()));
+        }
+        return Stream.<Order>empty();
+    }
+
+    public Stream<Order> getSellActiveOrdersQueue(String symbol){
+        if(orderQueues.containsKey(symbol)){
+            return orderQueues.get(symbol).sell.stream()
+                    .filter(o -> !cancelledOrders.contains(o.getId()));
+        }
+        return Stream.<Order>empty();
+    }
+
+    private void syncOrdersToQueue(){
+        var orders = orderRepository.findByClosedAtIsNull();
+        for(var order : orders){
+            addToQueue(order);
+        }
     }
 
     private void addToQueue(Order order){

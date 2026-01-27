@@ -5,10 +5,12 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.enums.TransactionType;
 import com.exchange_simulator.exceptionHandler.exceptions.OrderNotFoundException;
 import com.exchange_simulator.service.LimitOrderService;
+import com.exchange_simulator.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -16,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LimitOrderController {
     private final LimitOrderService limitOrderService;
+    private final OrderService orderService;
 
     @GetMapping("/{userId}/limit")
     public ResponseEntity<List<OrderResponseDto>> getUserOrders(@PathVariable Long userId)
@@ -64,5 +67,23 @@ public class LimitOrderController {
             limitOrderService.cancelSellOrder(order);
 
         return ResponseEntity.ok(limitOrderService.getDto(order));
+    }
+
+    @GetMapping("/book/{token}/buy")
+    public ResponseEntity<List<OrderResponseDto>> buyOrderBook(
+            @PathVariable String token
+    ){
+        return ResponseEntity.ok(
+                limitOrderService.getBuyActiveOrdersQueue(token).map(orderService::getDto).toList()
+        );
+    }
+
+    @GetMapping("/book/{token}/sell")
+    public ResponseEntity<List<OrderResponseDto>> sellOrderBook(
+            @PathVariable String token
+    ){
+        return ResponseEntity.ok(
+                limitOrderService.getSellActiveOrdersQueue(token).map(orderService::getDto).toList()
+        );
     }
 }
