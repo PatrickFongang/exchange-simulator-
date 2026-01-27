@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @Service
 public class LimitOrderService extends OrderService {
@@ -30,7 +32,7 @@ public class LimitOrderService extends OrderService {
     record QueuePair(PriorityBlockingQueue<Order> buy, PriorityBlockingQueue<Order> sell) {}
     Map<String, QueuePair> orderQueues = new ConcurrentHashMap<>();
     Set<Long> cancelledOrders = ConcurrentHashMap.newKeySet();
-    Map<String, Runnable> listenerCleaners = new ConcurrentHashMap<>();
+    Map<String, Consumer<Runnable>> listenerCleaners = new ConcurrentHashMap<>();
 
     public LimitOrderService(OrderRepository orderRepository,
                               UserRepository userRepository,
@@ -44,6 +46,31 @@ public class LimitOrderService extends OrderService {
         this.cryptoWebSocketService = cryptoWebSocketService;
         super(orderRepository, userRepository, cryptoDataService, spotPositionService);
         this.spotPositionRepository = spotPositionRepository;
+
+        syncOrdersToQueue();
+    }
+
+    public Stream<Order> getBuyActiveOrdersQueue(String symbol){
+        if(orderQueues.containsKey(symbol)){
+            return orderQueues.get(symbol).buy.stream()
+                    .filter(o -> !cancelledOrders.contains(o.getId()));
+        }
+        return Stream.empty();
+    }
+
+    public Stream<Order> getSellActiveOrdersQueue(String symbol){
+        if(orderQueues.containsKey(symbol)){
+            return orderQueues.get(symbol).sell.stream()
+                    .filter(o -> !cancelledOrders.contains(o.getId()));
+        }
+        return Stream.empty();
+    }
+
+    private void syncOrdersToQueue(){
+        var orders = orderRepository.findByClosedAtIsNull();
+        for(var order : orders){
+            addToQueue(order);
+        }
     }
 
     private void addToQueue(Order order){
@@ -97,8 +124,16 @@ public class LimitOrderService extends OrderService {
             }else cancelledOrders.remove(order.getId());
         }
 
+        while(!buyQueue.isEmpty() && cancelledOrders.contains(buyQueue.peek().getId()))
+            buyQueue.poll();
+
+        while(!sellQueue.isEmpty() && cancelledOrders.contains(sellQueue.peek().getId()))
+            sellQueue.poll();
+
         if(buyQueue.isEmpty() && sellQueue.isEmpty() && listenerCleaners.containsKey(event.getSymbol())){
-            listenerCleaners.get(event.getSymbol()).run();
+            listenerCleaners.get(event.getSymbol()).accept(() ->
+                    listenerCleaners.remove(event.getSymbol())
+            );
         }
     }
 

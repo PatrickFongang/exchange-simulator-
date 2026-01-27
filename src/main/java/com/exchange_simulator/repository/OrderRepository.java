@@ -34,4 +34,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Long user(User user);
 
     BigDecimal token(String token);
+
+    List<Order> findByClosedAtIsNull();
 }

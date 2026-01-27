@@ -5,6 +5,7 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.enums.TransactionType;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.OrderNotFoundException;
 import com.exchange_simulator.service.LimitOrderService;
+import com.exchange_simulator.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LimitOrderController {
     private final LimitOrderService limitOrderService;
+    private final OrderService orderService;
 
     @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
     @GetMapping("/{userId}/limit")
@@ -70,5 +72,23 @@ public class LimitOrderController {
             limitOrderService.cancelSellOrder(order);
 
         return ResponseEntity.ok(limitOrderService.getDto(order));
+    }
+
+    @GetMapping("/book/{token}/buy")
+    public ResponseEntity<List<OrderResponseDto>> buyOrderBook(
+            @PathVariable String token
+    ){
+        return ResponseEntity.ok(
+                limitOrderService.getBuyActiveOrdersQueue(token).map(orderService::getDto).toList()
+        );
+    }
+
+    @GetMapping("/book/{token}/sell")
+    public ResponseEntity<List<OrderResponseDto>> sellOrderBook(
+            @PathVariable String token
+    ){
+        return ResponseEntity.ok(
+                limitOrderService.getSellActiveOrdersQueue(token).map(orderService::getDto).toList()
+        );
     }
 }
