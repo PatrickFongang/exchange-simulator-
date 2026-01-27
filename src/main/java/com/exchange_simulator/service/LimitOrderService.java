@@ -54,7 +54,7 @@ public class LimitOrderService extends OrderService {
             return orderQueues.get(symbol).buy.stream()
                     .filter(o -> !cancelledOrders.contains(o.getId()));
         }
-        return Stream.<Order>empty();
+        return Stream.empty();
     }
 
     public Stream<Order> getSellActiveOrdersQueue(String symbol){
@@ -62,7 +62,7 @@ public class LimitOrderService extends OrderService {
             return orderQueues.get(symbol).sell.stream()
                     .filter(o -> !cancelledOrders.contains(o.getId()));
         }
-        return Stream.<Order>empty();
+        return Stream.empty();
     }
 
     private void syncOrdersToQueue(){
