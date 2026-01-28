@@ -24,7 +24,7 @@ public class UserController {
                 .map(UserService::getDto)
                 .toList());
     }
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUser(@PathVariable("id") Long id){
         var user = userService.getUserById(id);

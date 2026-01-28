@@ -4,11 +4,15 @@ import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.enums.TransactionType;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.OrderNotFoundException;
+import com.exchange_simulator.security.CustomUserDetails;
 import com.exchange_simulator.service.LimitOrderService;
 import com.exchange_simulator.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,51 +24,45 @@ public class LimitOrderController {
     private final LimitOrderService limitOrderService;
     private final OrderService orderService;
 
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
-    @GetMapping("/{userId}/limit")
-    public ResponseEntity<List<OrderResponseDto>> getUserOrders(@PathVariable Long userId)
+    @GetMapping("/limit")
+    public ResponseEntity<List<OrderResponseDto>> getUserOrders(@AuthenticationPrincipal CustomUserDetails user)
     {
-        return ResponseEntity.ok(limitOrderService.getUserLimitOrders(userId));
+        return ResponseEntity.ok(limitOrderService.getUserLimitOrders(user.getId()));
     }
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
-    @GetMapping("/{userId}/limit/buy")
-    public ResponseEntity<List<OrderResponseDto>> getUserBuyOrders(@PathVariable Long userId)
+    @GetMapping("/limit/buy")
+    public ResponseEntity<List<OrderResponseDto>> getUserBuyOrders(@AuthenticationPrincipal CustomUserDetails user)
     {
-        return ResponseEntity.ok(limitOrderService.getUserBuyLimitOrders(userId));
+        return ResponseEntity.ok(limitOrderService.getUserBuyLimitOrders(user.getId()));
     }
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
-    @GetMapping("/{userId}/limit/sell")
-    public ResponseEntity<List<OrderResponseDto>> getUserSellOrders(@PathVariable Long userId)
+
+    @GetMapping("/limit/sell")
+    public ResponseEntity<List<OrderResponseDto>> getUserSellOrders(@AuthenticationPrincipal CustomUserDetails user)
     {
-        return ResponseEntity.ok(limitOrderService.getUserSellLimitOrders(userId));
+        return ResponseEntity.ok(limitOrderService.getUserSellLimitOrders(user.getId()));
     }
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
-    @PostMapping("/{userId}/limit/buy")
+    @PostMapping("/limit/buy")
     public ResponseEntity<OrderResponseDto> buy(
-            @PathVariable Long userId,
-            @RequestBody OrderRequestDto orderRequestDto
+            @RequestBody OrderRequestDto orderRequestDto,
+            @AuthenticationPrincipal CustomUserDetails user
     ){
-        orderRequestDto.setUserId(userId);
+        orderRequestDto.setUserId(user.getId());
         var order = limitOrderService.buy(orderRequestDto);
         return ResponseEntity.ok(limitOrderService.getDto(order));
     }
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
-    @PostMapping("/{userId}/limit/sell")
+    @PostMapping("/limit/sell")
     public ResponseEntity<OrderResponseDto> sell(
-            @PathVariable Long userId,
-            @RequestBody OrderRequestDto orderRequestDto
-    ){
-        orderRequestDto.setUserId(userId);
+            @RequestBody OrderRequestDto orderRequestDto,
+            @AuthenticationPrincipal CustomUserDetails user){
+        orderRequestDto.setUserId(user.getId());
         var order = limitOrderService.sell(orderRequestDto);
         return ResponseEntity.ok(limitOrderService.getDto(order));
     }
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
-    @DeleteMapping("/{userId}/limit/cancel/{orderId}")
+    @DeleteMapping("/limit/{orderId}")
     public ResponseEntity<OrderResponseDto> cancelOrder(
-            @PathVariable Long userId,
-            @PathVariable Long orderId
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal CustomUserDetails user
     ){
-        var order = limitOrderService.findByUserAndOrderId(userId, orderId)
+        var order = limitOrderService.findByUserAndOrderId(user.getId(), orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
         if(order.getTransactionType() == TransactionType.BUY)
             limitOrderService.cancelBuyOrder(order);
@@ -91,4 +89,5 @@ public class LimitOrderController {
                 limitOrderService.getSellActiveOrdersQueue(token).map(orderService::getDto).toList()
         );
     }
+
 }
