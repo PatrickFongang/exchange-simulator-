@@ -28,13 +28,13 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
 
-    @PostMapping("/auth/registration")
+    @PostMapping("/api/auth/registration")
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateRequestDto userData) {
         var user = userService.createUser(userData);
         return ResponseEntity.ok(UserService.getDto(user));
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/api/auth/login")
     public ResponseEntity<String> authUser(@RequestBody LoginRequestDto loginRequest, HttpServletRequest request) {
         try {
             UsernamePasswordAuthenticationToken token =
@@ -56,7 +56,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server error: " + e.getMessage());
         }
     }
-    @PostMapping("/auth/logout")
+    @PostMapping("/api/auth/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
