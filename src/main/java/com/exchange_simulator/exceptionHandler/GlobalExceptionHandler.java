@@ -5,6 +5,7 @@ import com.exchange_simulator.exceptionHandler.exceptions.database.DatabaseExcep
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserAlreadyExistsException;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.*;
+import com.exchange_simulator.exceptionHandler.exceptions.visible.VisibleException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.xml.crypto.Data;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -95,19 +98,46 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        var errors = new HashMap<String, String>();
+        ex.getBindingResult().getFieldErrors().forEach(err ->
+           errors.put(err.getField(), err.getDefaultMessage())
+        );
+
         return new ResponseEntity<>(
-                buildResponse(HttpStatus.BAD_REQUEST, ex, request),
+                buildResponse(HttpStatus.BAD_REQUEST, ex, Optional.of(errors), request),
                 HttpStatus.BAD_REQUEST
         );
     }
 
-    private ErrorResponseDto buildResponse(HttpStatus status, Exception ex, HttpServletRequest request) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDto> handleUnhandledError(Exception ex, HttpServletRequest request) {
+        System.out.println("Received unhandled error:");
+        System.out.println(ex.toString());
+
+        return new ResponseEntity<>(
+                buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex, request),
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+
+
+
+    private ErrorResponseDto buildResponse(HttpStatus status, Exception ex, Optional<Map<String,String>> validationErrors, HttpServletRequest request) {
+        var message = "Internal Server Error";
+        if(ex instanceof VisibleException) message = ex.getMessage();
+        else if(validationErrors.isPresent()) message = "Fields did not complete validation";
+
         return new ErrorResponseDto(
                 LocalDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
+                message,
+                request.getRequestURI(),
+                validationErrors
         );
+    }
+
+    private ErrorResponseDto buildResponse(HttpStatus status, Exception ex, HttpServletRequest request) {
+        return buildResponse(status, ex, Optional.empty(), request);
     }
 }

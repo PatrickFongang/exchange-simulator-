@@ -38,10 +38,10 @@ public class CryptoWebSocketService {
                 .join();
     }
 
-    private void RemoveTokenWebSocket(String symbol, Optional<Runnable> cb){
+    private void RemoveTokenWebSocket(String symbol){
         if(openedSockets.containsKey(symbol)){
             openedSockets.get(symbol).sendClose(WebSocket.NORMAL_CLOSURE, "Internal request")
-                    .thenAccept(_ -> cb.ifPresent(Runnable::run))
+                    .thenAccept(_ -> System.out.println("Send close to socket " + symbol))
                     .exceptionally(ex -> {
                         System.out.println("Error sending close: " + ex);
                         return null;
@@ -64,20 +64,22 @@ public class CryptoWebSocketService {
             CreateTokenWebSocket(symbol);
         }
 
-        return (cb) -> this.RemoveTokenListener(symbol, consumer, cb);
+        return (cb) -> this.RemoveTokenListener(symbol, consumer, Optional.of(cb));
     }
 
-    public void RemoveTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer, Runnable cb){
+    public void RemoveTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer, Optional<Runnable> cb){
         listeners.get(symbol).remove(consumer);
 
         if(listeners.get(symbol).isEmpty()){
-            RemoveTokenWebSocket(symbol, Optional.of(cb));
+            RemoveTokenWebSocket(symbol);
         }
+
+        cb.ifPresent(Runnable::run);
     }
 
     public void dispose(){
         for(var symbol : openedSockets.keySet()){
-            RemoveTokenWebSocket(symbol, Optional.empty());
+            RemoveTokenWebSocket(symbol);
         }
     }
 
