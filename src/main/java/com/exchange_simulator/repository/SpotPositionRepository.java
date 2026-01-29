@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SpotPositionRepository extends JpaRepository<SpotPosition, Long> {
 
@@ -32,5 +33,5 @@ public interface SpotPositionRepository extends JpaRepository<SpotPosition, Long
             "where p.user.id = :userId and p.id = :posId")
     void updateAvgBuyPriceByUserAndPositionId(Long userId, Long posId, String token);
 
-    SpotPosition findByUserIdAndToken(Long userId, String token);
+    Optional<SpotPosition> findByUserIdAndToken(Long userId, String token);
 }

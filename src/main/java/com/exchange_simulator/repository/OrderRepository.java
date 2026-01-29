@@ -43,4 +43,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             " and o.token = :token " +
             " and o.transactionType = 'SELL'")
     List<Order> findOpenSellOrdersByUserAndToken(Long userId, String token);
+
+    @Query("select o from Order o " +
+            " join fetch o.user " +
+            " where o.id = :orderId")
+    User findUserOfOrderById(Long orderId);
 }

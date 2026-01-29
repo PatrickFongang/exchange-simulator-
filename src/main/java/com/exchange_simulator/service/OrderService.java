@@ -69,6 +69,10 @@ public class OrderService {
                 .toList();
     }
 
+    public User getUser(Order order){
+        return orderRepository.findUserOfOrderById(order.getId());
+    }
+
     public OrderResponseDto getDto(Order order){
         var tokenPrice = order.getTokenPrice();
         var orderValue = tokenPrice.multiply(order.getQuantity());

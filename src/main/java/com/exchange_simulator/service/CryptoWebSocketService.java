@@ -117,6 +117,7 @@ public class CryptoWebSocketService {
         public void onError(WebSocket webSocket, Throwable error){
             System.out.println("Error in WebSocket:");
             System.out.println(error.getMessage());
+            error.printStackTrace(System.out);
             WebSocket.Listener.super.onError(webSocket, error);
         }
 

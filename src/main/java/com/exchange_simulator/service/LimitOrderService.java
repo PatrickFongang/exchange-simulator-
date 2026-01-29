@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 @Service
 public class LimitOrderService extends OrderService {
     private final SpotPositionRepository spotPositionRepository;
+    private final OrderService orderService;
     CryptoWebSocketService cryptoWebSocketService;
 
     record QueuePair(PriorityBlockingQueue<Order> buy, PriorityBlockingQueue<Order> sell) {}
@@ -36,11 +37,12 @@ public class LimitOrderService extends OrderService {
     Map<String, Consumer<Runnable>> listenerCleaners = new ConcurrentHashMap<>();
 
     public LimitOrderService(OrderRepository orderRepository,
-                              UserRepository userRepository,
-                              CryptoDataService cryptoDataService,
-                              SpotPositionService spotPositionService,
-                              CryptoWebSocketService cryptoWebSocketService,
-                             SpotPositionRepository spotPositionRepository)
+                             UserRepository userRepository,
+                             CryptoDataService cryptoDataService,
+                             SpotPositionService spotPositionService,
+                             CryptoWebSocketService cryptoWebSocketService,
+                             SpotPositionRepository spotPositionRepository,
+                             OrderService orderService)
     {
 
         this.cryptoWebSocketService = cryptoWebSocketService;
@@ -48,6 +50,7 @@ public class LimitOrderService extends OrderService {
         this.spotPositionRepository = spotPositionRepository;
 
         syncOrdersToQueue();
+        this.orderService = orderService;
     }
 
     public Stream<Order> getBuyActiveOrdersQueue(String symbol){
@@ -169,6 +172,7 @@ public class LimitOrderService extends OrderService {
         return orderRepository.save(newOrder);
     }
 
+    @Transactional
     void finalizeBuyOrder(Order order){
         order.setClosedAt(Instant.now());
         orderRepository.saveAndFlush(order);
@@ -176,15 +180,19 @@ public class LimitOrderService extends OrderService {
         spotPositionService.handleBuy(order);
     }
 
+    @Transactional
     void finalizeSellOrder(Order order){
         order.setClosedAt(Instant.now());
 
-        var user = order.getUser();
+        /* Prevents fetching with no active session */
+        var user = orderService.getUser(order);
         user.setFunds(user.getFunds().add(order.getOrderValue()));
 
         orderRepository.save(order);
+        userRepository.save(user);
 
-        var position = spotPositionRepository.findByUserIdAndToken(user.getId(), order.getToken());
+        var position = spotPositionRepository.findByUserIdAndToken(user.getId(), order.getToken())
+                .orElseThrow(() -> new SpotPositionNotFoundException(user, order.getToken()));
         spotPositionService.syncPositionExist(position);
     }
 

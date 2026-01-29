@@ -22,7 +22,6 @@ import java.util.Optional;
 public class SpotPositionService {
     private final SpotPositionRepository spotPositionRepository;
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final CryptoDataService cryptoDataService;
 
     public void handleBuy(Order order) {
@@ -72,6 +71,10 @@ public class SpotPositionService {
     public Optional<SpotPosition> findPositionByToken(User user, String token) {
         var positions = spotPositionRepository.findAllByUserIdWithLock(user.getId());
         return positions.stream().filter(p -> p.getToken().equals(token)).findFirst();
+    }
+
+    public Optional<SpotPosition> findPositionByTokenUnlocked(Long userId, String token) {
+        return spotPositionRepository.findByUserIdAndToken(userId, token);
     }
 
     public boolean syncPositionExist(SpotPosition position){
