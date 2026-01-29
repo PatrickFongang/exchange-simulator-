@@ -165,11 +165,12 @@ public class LimitOrderService extends OrderService {
 
         var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
                 orderValue, user, TransactionType.SELL, OrderType.LIMIT, null);
+        orderRepository.saveAndFlush(newOrder);
         spotPositionService.handleSell(newOrder);
 
         addToQueue(newOrder);
 
-        return orderRepository.save(newOrder);
+        return newOrder;
     }
 
     @Transactional
@@ -230,14 +231,11 @@ public class LimitOrderService extends OrderService {
     {
         cancelledOrders.add(order.getId());
 
-        var positionOptional = spotPositionService.findPositionByToken(order.getUser(), order.getToken());
-
-        if(positionOptional.isEmpty()) throw new SpotPositionNotFoundException(order.getUser(), order.getToken());
-
-        var position = positionOptional.get();
+        var position = spotPositionService.findPositionByToken(order.getUser(), order.getToken())
+                .orElseThrow(() -> new SpotPositionNotFoundException(order.getUser(), order.getToken()));
 
         position.setQuantity(position.getQuantity().add(order.getQuantity()));
-        spotPositionRepository.save(position);
+        spotPositionRepository.saveAndFlush(position);
         spotPositionService.syncPositionExist(position);
 
         orderRepository.delete(order);
