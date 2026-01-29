@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/api/generated";
 import type { SpotPositionResponseDto } from "@/api/generated";
 import { usePrice } from "@/providers/price-provider";
+import { useAuth } from "@/providers/auth-provider";
 import type { SupportedToken } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,8 @@ export function OrderForm({ token }: OrderFormProps) {
   const [limitPrice, setLimitPrice] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
   const livePrice = usePrice(token);
+  const { user } = useAuth();
+  const availableFunds = user?.funds ?? 0;
   const queryClient = useQueryClient();
 
   // Only fetch position when in sell mode, not constantly
@@ -55,7 +58,7 @@ export function OrderForm({ token }: OrderFormProps) {
     {
       query: {
         enabled: side === "sell",
-        staleTime: Infinity, // Don't auto-refetch, only refetch when triggered
+        staleTime: Infinity,
         refetchOnWindowFocus: false,
       },
     }
@@ -77,23 +80,35 @@ export function OrderForm({ token }: OrderFormProps) {
     }
   }, [sliderValue, side, positionQuantity]);
 
-  // Reset slider when switching sides, refetch position when switching to sell
+  // Reset slider and quantity when switching sides, refetch position when switching to sell
   useEffect(() => {
-    if (side === "buy") {
-      setSliderValue(0);
-    } else {
-      // Refetch position when switching to sell mode
+    setSliderValue(0);
+    setQuantity("");
+    if (side === "sell") {
       refetchPosition();
     }
   }, [side, refetchPosition]);
 
+  const setBuyQuantityFromPct = (pct: number) => {
+    const price =
+      orderType === "limit" && limitPrice
+        ? parseFloat(limitPrice)
+        : livePrice;
+    if (!price || price <= 0 || availableFunds <= 0) return;
+    const maxQty = availableFunds / price;
+    const qty = maxQty * (pct / 100);
+    setQuantity(qty > 0 ? qty.toFixed(8).replace(/\.?0+$/, "") : "");
+  };
+
   const handleSliderChange = (values: number[]) => {
     const snapped = snapToPreset(values[0]);
     setSliderValue(snapped);
+    if (side === "buy") setBuyQuantityFromPct(snapped);
   };
 
   const handlePresetClick = (preset: number) => {
     setSliderValue(preset);
+    if (side === "buy") setBuyQuantityFromPct(preset);
   };
 
   const isPending =
@@ -134,7 +149,6 @@ export function OrderForm({ token }: OrderFormProps) {
       setLimitPrice("");
       setSliderValue(0);
       invalidateAll();
-      // Refetch position after order to update available quantity
       if (side === "sell") {
         refetchPosition();
       }
@@ -194,7 +208,13 @@ export function OrderForm({ token }: OrderFormProps) {
           {/* Market / Limit toggle */}
           <Tabs
             value={orderType}
-            onValueChange={(v) => setOrderType(v as "market" | "limit")}
+            onValueChange={(v) => {
+              const type = v as "market" | "limit";
+              setOrderType(type);
+              if (type === "limit" && livePrice != null) {
+                setLimitPrice(String(livePrice));
+              }
+            }}
           >
             <TabsList className="w-full">
               <TabsTrigger value="market" className="flex-1">
@@ -216,7 +236,17 @@ export function OrderForm({ token }: OrderFormProps) {
                 min="0"
                 placeholder="0.00"
                 value={limitPrice}
-                onChange={(e) => setLimitPrice(e.target.value)}
+                onChange={(e) => {
+                  setLimitPrice(e.target.value);
+                  if (side === "buy" && sliderValue > 0 && availableFunds > 0) {
+                    const price = parseFloat(e.target.value);
+                    if (price && price > 0) {
+                      const maxQty = availableFunds / price;
+                      const qty = maxQty * (sliderValue / 100);
+                      setQuantity(qty > 0 ? qty.toFixed(8).replace(/\.?0+$/, "") : "");
+                    }
+                  }
+                }}
               />
             </div>
           )}
@@ -225,8 +255,13 @@ export function OrderForm({ token }: OrderFormProps) {
             <div className="flex items-center justify-between">
               <Label htmlFor="quantity">Quantity ({token.toUpperCase()})</Label>
               {side === "sell" && positionQuantity > 0 && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground tabular-nums">
                   Available: {positionQuantity.toFixed(6).replace(/\.?0+$/, "")}
+                </span>
+              )}
+              {side === "buy" && availableFunds > 0 && (
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  Available: ${availableFunds.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               )}
             </div>
@@ -239,17 +274,28 @@ export function OrderForm({ token }: OrderFormProps) {
               value={quantity}
               onChange={(e) => {
                 setQuantity(e.target.value);
-                // Update slider when manually entering quantity (sell mode)
+                const val = parseFloat(e.target.value);
                 if (side === "sell" && positionQuantity > 0) {
-                  const pct = (parseFloat(e.target.value) / positionQuantity) * 100;
-                  setSliderValue(Math.min(100, Math.max(0, pct)));
+                  const pct = (val / positionQuantity) * 100;
+                  setSliderValue(Math.min(100, Math.max(0, isNaN(pct) ? 0 : pct)));
+                } else if (side === "buy" && availableFunds > 0) {
+                  const price =
+                    orderType === "limit" && limitPrice
+                      ? parseFloat(limitPrice)
+                      : livePrice;
+                  if (price && price > 0) {
+                    const maxQty = availableFunds / price;
+                    const pct = (val / maxQty) * 100;
+                    setSliderValue(Math.min(100, Math.max(0, isNaN(pct) ? 0 : pct)));
+                  }
                 }
               }}
             />
           </div>
 
-          {/* Quantity slider for selling */}
-          {side === "sell" && positionQuantity > 0 && (
+          {/* Quantity slider */}
+          {((side === "sell" && positionQuantity > 0) ||
+            (side === "buy" && availableFunds > 0 && livePrice != null && livePrice > 0)) && (
             <div className="space-y-3">
               <Slider
                 value={[sliderValue]}
@@ -278,6 +324,12 @@ export function OrderForm({ token }: OrderFormProps) {
           {side === "sell" && positionQuantity === 0 && (
             <p className="text-sm text-muted-foreground text-center py-2">
               No {token.toUpperCase()} to sell
+            </p>
+          )}
+
+          {side === "buy" && availableFunds === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              No funds available
             </p>
           )}
 
