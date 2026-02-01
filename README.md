@@ -59,7 +59,7 @@ The project follows a standard layered architecture:
 
 ### Prerequisites
 
-* Java 17 or higher
+* Java 25 or higher
 * Maven
 
 ### Steps to Run
