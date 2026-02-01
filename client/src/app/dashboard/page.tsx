@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
+import { AuthGuard } from "@/components/auth-guard";
 import { useGetPortfolio } from "@/api/generated";
 import type { SpotPositionResponseDto } from "@/api/generated";
 import { usePrices } from "@/providers/price-provider";
@@ -155,48 +156,42 @@ function MarketOverview() {
 }
 
 export default function DashboardPage() {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
+  const { user } = useAuth();
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.username ?? "trader"}
-          </p>
+    <AuthGuard>
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back, {user?.username ?? "trader"}
+            </p>
+          </div>
+          {user?.funds != null && (
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-muted-foreground">Available Funds</p>
+                <p className="text-2xl font-bold">${fmt(user.funds)}</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
-        {user?.funds != null && (
+
+        <section>
+          <h2 className="mb-4 text-lg font-semibold">Markets</h2>
+          <MarketOverview />
+        </section>
+
+        <section>
+          <h2 className="mb-4 text-lg font-semibold">Portfolio</h2>
           <Card>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Available Funds</p>
-              <p className="text-2xl font-bold">${fmt(user.funds)}</p>
+            <CardContent className="p-0">
+              <PortfolioTable />
             </CardContent>
           </Card>
-        )}
+        </section>
       </div>
-
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Markets</h2>
-        <MarketOverview />
-      </section>
-
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Portfolio</h2>
-        <Card>
-          <CardContent className="p-0">
-            <PortfolioTable />
-          </CardContent>
-        </Card>
-      </section>
-    </div>
+    </AuthGuard>
   );
 }

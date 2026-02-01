@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCreateUser } from "@/api/generated";
+import { GuestGuard } from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +42,7 @@ export default function RegisterPage() {
   };
 
   return (
+    <GuestGuard>
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
@@ -101,5 +103,6 @@ export default function RegisterPage() {
         </CardContent>
       </Card>
     </div>
+    </GuestGuard>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import { AuthGuard } from "@/components/auth-guard";
 import { usePrices } from "@/providers/price-provider";
 import { TOKEN_MAP, type SupportedToken } from "@/lib/constants";
 import { PriceChart } from "@/components/trade/price-chart";
@@ -42,35 +43,37 @@ export default function TradePage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">
-          {info.label} ({info.displaySymbol})
-        </h1>
-        <span className={`text-2xl font-bold tabular-nums transition-colors ${priceColorClass}`}>
-          {priceData != null ? `$${fmt(priceData.current)}` : "..."}
-        </span>
-      </div>
-
-      {/* Main grid: chart + sidebar */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        {/* Left column */}
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-2">
-              <PriceChart token={token as SupportedToken} />
-            </CardContent>
-          </Card>
-          <OrderHistory token={token as SupportedToken} />
+    <AuthGuard>
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">
+            {info.label} ({info.displaySymbol})
+          </h1>
+          <span className={`text-2xl font-bold tabular-nums transition-colors ${priceColorClass}`}>
+            {priceData != null ? `$${fmt(priceData.current)}` : "..."}
+          </span>
         </div>
 
-        {/* Right sidebar */}
-        <div className="space-y-6">
-          <OrderForm token={token as SupportedToken} />
-          <OrderBook token={token as SupportedToken} />
+        {/* Main grid: chart + sidebar */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          {/* Left column */}
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="p-2">
+                <PriceChart token={token as SupportedToken} />
+              </CardContent>
+            </Card>
+            <OrderHistory token={token as SupportedToken} />
+          </div>
+
+          {/* Right sidebar */}
+          <div className="space-y-6">
+            <OrderForm token={token as SupportedToken} />
+            <OrderBook token={token as SupportedToken} />
+          </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

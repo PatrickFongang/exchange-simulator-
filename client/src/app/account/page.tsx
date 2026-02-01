@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
+import { AuthGuard } from "@/components/auth-guard";
 import {
   useGetPortfolio,
   useGetUserOrders,
@@ -514,29 +515,21 @@ function AccountStats() {
 }
 
 export default function AccountPage() {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
-      <div>
-        <h1 className="text-2xl font-bold">Account</h1>
-        <p className="text-muted-foreground">
-          Manage your account and view activity
-        </p>
-      </div>
+    <AuthGuard>
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
+        <div>
+          <h1 className="text-2xl font-bold">Account</h1>
+          <p className="text-muted-foreground">
+            Manage your account and view activity
+          </p>
+        </div>
 
-      <UserInfoSection />
-      <AccountStats />
-      <PortfolioSection />
-      <OrdersSection />
-    </div>
+        <UserInfoSection />
+        <AccountStats />
+        <PortfolioSection />
+        <OrdersSection />
+      </div>
+    </AuthGuard>
   );
 }

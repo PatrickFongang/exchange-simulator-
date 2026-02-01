@@ -3,7 +3,6 @@
 import { memo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
-import { useLogout } from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { usePrices } from "@/providers/price-provider";
 import { SUPPORTED_TOKENS } from "@/lib/constants";
@@ -79,15 +78,6 @@ const PriceTicker = memo(function PriceTicker() {
 
 export function Navbar() {
   const { user, isAuthenticated, handleLogout } = useAuth();
-  const logoutMutation = useLogout();
-
-  const onLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSettled: () => {
-        handleLogout();
-      },
-    });
-  };
 
   return (
     <header className="border-b border-border bg-card">
@@ -125,7 +115,7 @@ export function Navbar() {
                   </span>
                 )}
               </span>
-              <Button variant="ghost" size="sm" onClick={onLogout}>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
                 Logout
               </Button>
             </div>
