@@ -84,7 +84,7 @@ cd exchange-simulator
 
 The project includes a fully documented OpenAPI specification. Once the application is running, you can access the Swagger UI to test endpoints interactively.
 
-**Swagger UI:** `http://localhost:8080/swagger-ui.html` (Default SpringDoc path)
+**Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
 
 ### Core Endpoints
 
