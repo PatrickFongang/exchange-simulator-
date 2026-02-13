@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name="spotPosition")
+@Table(name="spotPositions")
 public class SpotPosition extends Base{
     public SpotPosition() {}
 

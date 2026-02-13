@@ -1,5 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Exchange" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <envs>
+      <env name="SPRING_DATASOURCE_USERNAME" value="spring_user" />
+      <env name="SPRING_DATASOURCE_PASSWORD" value="qazpl,1067" />
+    </envs>
     <module name="exchange-simulator" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.exchange_simulator.ExchangeSimulatorApplication" />
     <method v="2">

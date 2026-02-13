@@ -12,7 +12,7 @@ import java.time.Instant;
 
 @Entity
 @NoArgsConstructor
-@Table(name = "marketOrders")
+@Table(name = "orders")
 public class Order extends Base{
 
     public Order(String token, BigDecimal quantity, BigDecimal tokenPrice,

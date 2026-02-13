@@ -12,7 +12,7 @@ import java.time.Instant;
 @Data
 public abstract class Base {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     protected Long id;
 
