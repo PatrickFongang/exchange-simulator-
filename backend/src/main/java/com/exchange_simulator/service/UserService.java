@@ -1,6 +1,6 @@
 package com.exchange_simulator.service;
 
-import com.exchange_simulator.dto.user.UserCreateRequestDto;
+import com.exchange_simulator.dto.user.UserRequestDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
 import com.exchange_simulator.entity.User;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserAlreadyExistsException;
@@ -23,16 +23,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User createUser(UserCreateRequestDto userData){
-        if(userRepository.existsByUsername(userData.getUsername())){
-            throw new UserAlreadyExistsException("User with username '" + userData.getUsername() + "' already exists");
+    public User createUser(UserRequestDto userData){
+        if(userRepository.existsByUsername(userData.username())){
+            throw new UserAlreadyExistsException("User with username '" + userData.username() + "' already exists");
         }
-        if(userRepository.existsByEmail(userData.getEmail())){
-            throw new UserAlreadyExistsException("User with email '" + userData.getEmail() + "' already exists");
+        if(userRepository.existsByEmail(userData.email())){
+            throw new UserAlreadyExistsException("User with email '" + userData.email() + "' already exists");
         }
-        String password = passwordEncoder.encode(userData.getPassword());
-        String role = userData.getRole().toUpperCase();
-        return userRepository.save(new User(userData.getUsername(), userData.getEmail(),
+        String password = passwordEncoder.encode(userData.password());
+        String role = userData.role().toUpperCase();
+        return userRepository.save(new User(userData.username(), userData.email(),
                 password, role));
     }
 

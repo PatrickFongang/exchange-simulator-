@@ -22,13 +22,13 @@ public class MarketOrderService extends OrderService {
                                 SpotPositionService spotPositionService)
     { super(orderRepository, userRepository, userService, cryptoDataService, spotPositionService); }
     @Transactional
-    public Order buy(OrderRequestDto dto) {
-        var data = prepareToBuy(dto);
+    public Order buy(OrderRequestDto dto, Long userId) {
+        var data = prepareToBuy(dto, userId);
         var user = data.user();
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var order = orderRepository.save (new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+        var order = orderRepository.save (new Order(dto.token(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.BUY, OrderType.MARKET, Instant.now()));
 
         spotPositionService.handleBuy(order);
@@ -38,13 +38,13 @@ public class MarketOrderService extends OrderService {
     }
 
     @Transactional
-    public Order sell(OrderRequestDto dto) {
-        var data = prepareToSell(dto);
+    public Order sell(OrderRequestDto dto, Long userId) {
+        var data = prepareToSell(dto, userId);
         var user = data.user();
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var order = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+        var order = new Order(dto.token(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.SELL, OrderType.MARKET, Instant.now());
 
         spotPositionService.handleSell(order);

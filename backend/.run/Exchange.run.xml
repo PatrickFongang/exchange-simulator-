@@ -3,6 +3,9 @@
     <envs>
       <env name="SPRING_DATASOURCE_USERNAME" value="spring_user" />
       <env name="SPRING_DATASOURCE_PASSWORD" value="qazpl,1067" />
+      <env name="SPRING_DATASOURCE_HOST" value="localhost" />
+      <env name="SPRING_DATASOURCE_PORT" value="3306" />
+      <env name="SPRING_DATASOURCE_NAME" value="exchange_simulator" />
     </envs>
     <module name="exchange-simulator" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.exchange_simulator.ExchangeSimulatorApplication" />

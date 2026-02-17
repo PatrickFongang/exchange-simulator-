@@ -1,7 +1,7 @@
 package com.exchange_simulator.controller;
 
 import com.exchange_simulator.dto.login.LoginRequestDto;
-import com.exchange_simulator.dto.user.UserCreateRequestDto;
+import com.exchange_simulator.dto.user.UserRequestDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import com.exchange_simulator.service.UserService;
@@ -24,21 +24,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/auth")
 public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
 
-    @PostMapping("/api/auth/registration")
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateRequestDto userData) {
+    @PostMapping("/registration")
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userData) {
         var user = userService.createUser(userData);
         return ResponseEntity.ok(UserService.getDto(user));
     }
 
-    @PostMapping("/api/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<String> authUser(@RequestBody LoginRequestDto loginRequest, HttpServletRequest request) {
+        System.out.println("Username: " + loginRequest.username());
+        System.out.println("Password: " + loginRequest.password());
         try {
             UsernamePasswordAuthenticationToken token =
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
+                    new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password());
 
             Authentication authentication = authenticationManager.authenticate(token);
 
@@ -56,7 +59,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server error: " + e.getMessage());
         }
     }
-    @PostMapping("/api/auth/logout")
+    @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 

@@ -17,14 +17,14 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/users")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class AdminController {
     final private UserService userService;
     final private OrderService orderService;
     final private SpotPositionService spotPositionService;
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<UserResponseDto>> getUsers(){
         return ResponseEntity.ok(userService
                 .getUsers()

@@ -151,14 +151,14 @@ public class LimitOrderService extends OrderService {
     }
 
     @Transactional
-    public Order buy(OrderRequestDto dto) {
-        var data = prepareToBuy(dto);
+    public Order buy(OrderRequestDto dto, Long userId) {
+        var data = prepareToBuy(dto, userId);
         var user = data.user();
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
         user.setFunds(user.getFunds().subtract(orderValue));
-        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+        var newOrder = new Order(dto.token(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.BUY, OrderType.LIMIT, null);
 
         orderRepository.saveAndFlush(newOrder);
@@ -169,13 +169,13 @@ public class LimitOrderService extends OrderService {
     }
 
     @Transactional
-    public Order sell(OrderRequestDto dto) {
-        var data = prepareToSell(dto);
+    public Order sell(OrderRequestDto dto, Long userId) {
+        var data = prepareToSell(dto, userId);
         var user = data.user();
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+        var newOrder = new Order(dto.token(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.SELL, OrderType.LIMIT, null);
         orderRepository.saveAndFlush(newOrder);
         spotPositionService.handleSell(newOrder);

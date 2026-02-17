@@ -13,41 +13,39 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users-orders")
+@RequestMapping("/api/users-orders/market")
 @RequiredArgsConstructor
 public class MarketOrderController {
     private final MarketOrderService marketOrderService;
-    @GetMapping("/market")
+    @GetMapping
     public ResponseEntity<List<OrderResponseDto>> getUserOrders(@AuthenticationPrincipal CustomUserDetails user)
     {
         return ResponseEntity.ok(marketOrderService.getUserMarketOrders(user.getId()));
     }
-    @GetMapping("/market/buy")
+    @GetMapping("/buy")
     public ResponseEntity<List<OrderResponseDto>> getUserBuyOrders(@AuthenticationPrincipal CustomUserDetails user)
     {
         return ResponseEntity.ok(marketOrderService.getUserBuyMarketOrders(user.getId()));
     }
-    @GetMapping("/market/sell")
+    @GetMapping("/sell")
     public ResponseEntity<List<OrderResponseDto>> getUserSellOrders(@AuthenticationPrincipal CustomUserDetails user)
     {
         return ResponseEntity.ok(marketOrderService.getUserSellMarketOrders(user.getId()));
     }
-    @PostMapping("/market/buy")
+    @PostMapping("/buy")
     public ResponseEntity<OrderResponseDto> buy(
             @RequestBody OrderRequestDto orderRequestDto,
             @AuthenticationPrincipal CustomUserDetails user
     ){
-        orderRequestDto.setUserId(user.getId());
-        var order = marketOrderService.buy(orderRequestDto);
+        var order = marketOrderService.buy(orderRequestDto, user.getId());
         return ResponseEntity.ok(marketOrderService.getDto(order));
     }
-    @PostMapping("/market/sell")
+    @PostMapping("/sell")
     public ResponseEntity<OrderResponseDto> sell(
             @RequestBody OrderRequestDto orderRequestDto,
             @AuthenticationPrincipal CustomUserDetails user
     ){
-        orderRequestDto.setUserId(user.getId());
-        var order = marketOrderService.sell(orderRequestDto);
+        var order = marketOrderService.sell(orderRequestDto, user.getId());
         return ResponseEntity.ok(marketOrderService.getDto(order));
     }
 }

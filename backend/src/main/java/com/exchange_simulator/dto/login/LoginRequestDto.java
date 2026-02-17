@@ -1,11 +1,8 @@
 package com.exchange_simulator.dto.login;
 
-import lombok.Getter;
 
-public class LoginRequestDto {
-    @Getter
-    String username;
-
-    @Getter
-    String password;
-}
+public record LoginRequestDto (
+    String username,
+    String password
+)
+{}

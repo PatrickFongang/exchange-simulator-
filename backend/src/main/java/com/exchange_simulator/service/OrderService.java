@@ -26,22 +26,22 @@ public class OrderService {
     protected final CryptoDataService cryptoDataService;
     protected final SpotPositionService spotPositionService;
 
-    protected OrderFinalization prepareToBuy(OrderRequestDto dto){
-        var user = userService.findUserByIdWithLock(dto.getUserId());
-        validateQuantity(dto.getQuantity());
+    protected OrderFinalization prepareToBuy(OrderRequestDto dto, Long userId){
+        var user = userService.findUserByIdWithLock(userId);
+        validateQuantity(dto.quantity());
 
-        var tokenPrice = dto.getLimit() == null ? cryptoDataService.getPrice(dto.getToken()) : dto.getLimit();
-        var orderValue = toPay(user, dto.getQuantity(), tokenPrice);
+        var tokenPrice = dto.limit() == null ? cryptoDataService.getPrice(dto.token()) : dto.limit();
+        var orderValue = toPay(user, dto.quantity(), tokenPrice);
 
         return new OrderFinalization(user, orderValue, tokenPrice);
     }
 
-    protected OrderFinalization prepareToSell(OrderRequestDto dto){
-        var user = userService.findUserByIdWithLock(dto.getUserId());
-        validateQuantity(dto.getQuantity());
+    protected OrderFinalization prepareToSell(OrderRequestDto dto, Long userId){
+        var user = userService.findUserByIdWithLock(userId);
+        validateQuantity(dto.quantity());
 
-        var tokenPrice = dto.getLimit() == null ? cryptoDataService.getPrice(dto.getToken()) : dto.getLimit();
-        var orderValue = tokenPrice.multiply(dto.getQuantity());
+        var tokenPrice = dto.limit() == null ? cryptoDataService.getPrice(dto.token()) : dto.limit();
+        var orderValue = tokenPrice.multiply(dto.quantity());
 
         return new OrderFinalization(user, orderValue, tokenPrice);
     }

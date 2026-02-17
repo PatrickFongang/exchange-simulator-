@@ -45,16 +45,14 @@ public class LimitOrderController {
             @RequestBody OrderRequestDto orderRequestDto,
             @AuthenticationPrincipal CustomUserDetails user
     ){
-        orderRequestDto.setUserId(user.getId());
-        var order = limitOrderService.buy(orderRequestDto);
+        var order = limitOrderService.buy(orderRequestDto, user.getId());
         return ResponseEntity.ok(limitOrderService.getDto(order));
     }
     @PostMapping("/limit/sell")
     public ResponseEntity<OrderResponseDto> sell(
             @RequestBody OrderRequestDto orderRequestDto,
             @AuthenticationPrincipal CustomUserDetails user){
-        orderRequestDto.setUserId(user.getId());
-        var order = limitOrderService.sell(orderRequestDto);
+        var order = limitOrderService.sell(orderRequestDto, user.getId());
         return ResponseEntity.ok(limitOrderService.getDto(order));
     }
     @DeleteMapping("/limit/{orderId}")
