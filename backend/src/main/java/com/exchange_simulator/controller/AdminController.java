@@ -1,5 +1,6 @@
 package com.exchange_simulator.controller;
 
+import com.exchange_simulator.Mapper.UserMapper;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
@@ -23,13 +24,14 @@ public class AdminController {
     final private UserService userService;
     final private OrderService orderService;
     final private SpotPositionService spotPositionService;
+    final private UserMapper userMapper;
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping()
     public ResponseEntity<List<UserResponseDto>> getUsers(){
         return ResponseEntity.ok(userService
                 .getUsers()
                 .stream()
-                .map(UserService::getDto)
+                .map(userMapper::toDto)
                 .toList());
     }
     @PreAuthorize("hasRole('ADMIN')")
@@ -39,7 +41,7 @@ public class AdminController {
     ){
         var user = userService.getUserById(id);
         return user
-                .map(value -> ResponseEntity.ok().body(UserService.getDto(value)))
+                .map(u -> ResponseEntity.ok().body(userMapper.toDto(u)))
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
     @PreAuthorize("hasRole('ADMIN')")
@@ -66,6 +68,6 @@ public class AdminController {
                 .orElseThrow(() -> new UserNotFoundException(id));
         userService.updateFunds(user, amount);
 
-        return ResponseEntity.ok(UserService.getDto(user));
+        return ResponseEntity.ok(userMapper.toDto(user));
     }
 }

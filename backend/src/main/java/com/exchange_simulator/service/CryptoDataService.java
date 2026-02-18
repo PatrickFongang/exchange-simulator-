@@ -23,7 +23,7 @@ public class CryptoDataService {
     }
 
     public BigDecimal getPrice(String token){
-        var ticker = getTicker(token, "USDT");
+        var ticker = getTicker(token.toUpperCase(), "USDT");
         return ticker.getBid();
     }
 
@@ -34,12 +34,4 @@ public class CryptoDataService {
             throw new RuntimeException("Ticker error", e);
         }
     }
-    public OrderBook getOrderBook(String base, String counter) {
-        try {
-            return marketDataService.getOrderBook(new CurrencyPair(base, counter));
-        } catch (IOException e) {
-            throw new RuntimeException("OrderBook error", e);
-        }
-    }
-
 }

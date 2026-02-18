@@ -1,5 +1,6 @@
 package com.exchange_simulator.service;
 
+import com.exchange_simulator.Mapper.OrderMapper;
 import com.exchange_simulator.dto.binance.MarkPriceStreamEvent;
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
@@ -47,11 +48,12 @@ public class LimitOrderService extends OrderService {
                              SpotPositionService spotPositionService,
                              CryptoWebSocketService cryptoWebSocketService,
                              SpotPositionRepository spotPositionRepository,
-                             OrderService orderService)
+                             OrderService orderService,
+                             OrderMapper orderMapper)
     {
 
         this.cryptoWebSocketService = cryptoWebSocketService;
-        super(orderRepository, userRepository, userService, cryptoDataService, spotPositionService);
+        super(orderRepository, userRepository, userService, cryptoDataService, spotPositionService, orderMapper);
         this.spotPositionRepository = spotPositionRepository;
 
         syncOrdersToQueue();
@@ -158,7 +160,7 @@ public class LimitOrderService extends OrderService {
         var tokenPrice = data.tokenPrice();
 
         user.setFunds(user.getFunds().subtract(orderValue));
-        var newOrder = new Order(dto.token(), dto.quantity(), tokenPrice,
+        var newOrder = new Order(dto.token().toLowerCase(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.BUY, OrderType.LIMIT, null);
 
         orderRepository.saveAndFlush(newOrder);
@@ -175,7 +177,7 @@ public class LimitOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var newOrder = new Order(dto.token(), dto.quantity(), tokenPrice,
+        var newOrder = new Order(dto.token().toLowerCase(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.SELL, OrderType.LIMIT, null);
         orderRepository.saveAndFlush(newOrder);
         spotPositionService.handleSell(newOrder);
@@ -222,7 +224,7 @@ public class LimitOrderService extends OrderService {
         return orderRepository.findAllByUserId(userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.LIMIT))
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
     public List<OrderResponseDto> getUserBuyLimitOrders(Long userId)
@@ -231,7 +233,7 @@ public class LimitOrderService extends OrderService {
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.BUY, userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.LIMIT))
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
     public List<OrderResponseDto> getUserSellLimitOrders(Long userId)
@@ -240,7 +242,7 @@ public class LimitOrderService extends OrderService {
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.SELL,userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.LIMIT))
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
 

@@ -1,5 +1,6 @@
 package com.exchange_simulator.controller;
 
+import com.exchange_simulator.Mapper.UserMapper;
 import com.exchange_simulator.dto.user.UserResponseDto;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;
 import com.exchange_simulator.security.CustomUserDetails;
@@ -17,12 +18,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final UserMapper userMapper;
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getMe(@AuthenticationPrincipal CustomUserDetails user){
         var found = userService.getUserById(user.getId());
         return found
-                .map(value -> ResponseEntity.ok().body(UserService.getDto(value)))
+                .map(u -> ResponseEntity.ok().body(userMapper.toDto(u)))
                 .orElseThrow(() -> new UserNotFoundException(user.getId()));
     }
 }

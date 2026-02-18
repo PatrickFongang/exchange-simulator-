@@ -1,12 +1,12 @@
 package com.exchange_simulator.controller;
 
+import com.exchange_simulator.Mapper.OrderMapper;
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.security.CustomUserDetails;
 import com.exchange_simulator.service.MarketOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MarketOrderController {
     private final MarketOrderService marketOrderService;
+    private final OrderMapper orderMapper;
     @GetMapping
     public ResponseEntity<List<OrderResponseDto>> getUserOrders(@AuthenticationPrincipal CustomUserDetails user)
     {
@@ -38,7 +39,7 @@ public class MarketOrderController {
             @AuthenticationPrincipal CustomUserDetails user
     ){
         var order = marketOrderService.buy(orderRequestDto, user.getId());
-        return ResponseEntity.ok(marketOrderService.getDto(order));
+        return ResponseEntity.ok(orderMapper.toDto(order));
     }
     @PostMapping("/sell")
     public ResponseEntity<OrderResponseDto> sell(
@@ -46,6 +47,6 @@ public class MarketOrderController {
             @AuthenticationPrincipal CustomUserDetails user
     ){
         var order = marketOrderService.sell(orderRequestDto, user.getId());
-        return ResponseEntity.ok(marketOrderService.getDto(order));
+        return ResponseEntity.ok(orderMapper.toDto(order));
     }
 }

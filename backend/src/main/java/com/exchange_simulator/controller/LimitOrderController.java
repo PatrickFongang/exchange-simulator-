@@ -1,18 +1,15 @@
 package com.exchange_simulator.controller;
 
+import com.exchange_simulator.Mapper.OrderMapper;
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.enums.TransactionType;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.OrderNotFoundException;
 import com.exchange_simulator.security.CustomUserDetails;
 import com.exchange_simulator.service.LimitOrderService;
-import com.exchange_simulator.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LimitOrderController {
     private final LimitOrderService limitOrderService;
-    private final OrderService orderService;
+    private final OrderMapper orderMapper;
 
     @GetMapping("/limit")
     public ResponseEntity<List<OrderResponseDto>> getUserOrders(@AuthenticationPrincipal CustomUserDetails user)
@@ -46,14 +43,14 @@ public class LimitOrderController {
             @AuthenticationPrincipal CustomUserDetails user
     ){
         var order = limitOrderService.buy(orderRequestDto, user.getId());
-        return ResponseEntity.ok(limitOrderService.getDto(order));
+        return ResponseEntity.ok(orderMapper.toDto(order));
     }
     @PostMapping("/limit/sell")
     public ResponseEntity<OrderResponseDto> sell(
             @RequestBody OrderRequestDto orderRequestDto,
             @AuthenticationPrincipal CustomUserDetails user){
         var order = limitOrderService.sell(orderRequestDto, user.getId());
-        return ResponseEntity.ok(limitOrderService.getDto(order));
+        return ResponseEntity.ok(orderMapper.toDto(order));
     }
     @DeleteMapping("/limit/{orderId}")
     public ResponseEntity<OrderResponseDto> cancelOrder(
@@ -67,7 +64,7 @@ public class LimitOrderController {
         else
             limitOrderService.cancelSellOrder(order);
 
-        return ResponseEntity.ok(limitOrderService.getDto(order));
+        return ResponseEntity.ok(orderMapper.toDto(order));
     }
 
     @GetMapping("/book/{token}/buy")
@@ -75,7 +72,7 @@ public class LimitOrderController {
             @PathVariable String token
     ){
         return ResponseEntity.ok(
-                limitOrderService.getBuyActiveOrdersQueue(token).map(orderService::getDto).toList()
+                limitOrderService.getBuyActiveOrdersQueue(token).map(orderMapper::toDto).toList()
         );
     }
 
@@ -84,7 +81,7 @@ public class LimitOrderController {
             @PathVariable String token
     ){
         return ResponseEntity.ok(
-                limitOrderService.getSellActiveOrdersQueue(token).map(orderService::getDto).toList()
+                limitOrderService.getSellActiveOrdersQueue(token).map(orderMapper::toDto).toList()
         );
     }
 

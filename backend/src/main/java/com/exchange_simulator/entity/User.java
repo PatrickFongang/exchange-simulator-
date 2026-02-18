@@ -1,8 +1,7 @@
 package com.exchange_simulator.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
@@ -15,6 +14,9 @@ import java.util.Objects;
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_email", columnList = "email")
 })
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class User extends Base{
     @Getter
     @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
@@ -42,7 +44,7 @@ public class User extends Base{
     @Getter
     @Setter
     @Column(nullable = false)
-    private BigDecimal funds = BigDecimal.valueOf(1000.0);
+    private BigDecimal funds;
 
     @UpdateTimestamp
     @Column(nullable = false)
@@ -52,32 +54,10 @@ public class User extends Base{
     @Getter
     @Setter
     @Column(nullable = false)
-    private boolean isActive;
-
-    public User() {}
-
-    public User(String username, String email, String password, String role) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.isActive = true;
-    }
+    private Boolean isActive;
 
     @Override
     public String toString() {
         return "User " + username + " with email = " + email;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(positions, user.positions) && Objects.equals(username, user.username) && Objects.equals(email, user.email) && Objects.equals(funds, user.funds);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(positions, username, email, funds);
     }
 }

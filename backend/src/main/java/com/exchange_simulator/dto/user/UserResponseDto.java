@@ -10,5 +10,6 @@ public record UserResponseDto(
         Instant createdAt,
         String username,
         String email,
-        BigDecimal funds) implements Serializable
+        BigDecimal funds,
+        Boolean isActive) implements Serializable
 {}

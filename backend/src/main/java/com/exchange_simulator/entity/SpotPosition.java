@@ -3,6 +3,7 @@ package com.exchange_simulator.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,17 +12,9 @@ import java.time.Instant;
 
 @Entity
 @Table(name="spotPositions")
+@AllArgsConstructor
+@NoArgsConstructor
 public class SpotPosition extends Base{
-    public SpotPosition() {}
-
-    public SpotPosition(String token, BigDecimal quantity, BigDecimal avgBuyPrice, User user, Instant lastBuyOrder) {
-        this.token = token;
-        this.quantity = quantity;
-        this.avgBuyPrice = avgBuyPrice;
-        this.timestamp = lastBuyOrder;
-        this.user = user;
-    }
-
     @Getter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

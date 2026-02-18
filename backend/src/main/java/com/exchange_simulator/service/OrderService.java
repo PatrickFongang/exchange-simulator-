@@ -1,5 +1,6 @@
 package com.exchange_simulator.service;
 
+import com.exchange_simulator.Mapper.OrderMapper;
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.entity.Order;
@@ -25,6 +26,7 @@ public class OrderService {
     protected final UserService userService;
     protected final CryptoDataService cryptoDataService;
     protected final SpotPositionService spotPositionService;
+    protected final OrderMapper orderMapper;
 
     protected OrderFinalization prepareToBuy(OrderRequestDto dto, Long userId){
         var user = userService.findUserByIdWithLock(userId);
@@ -50,7 +52,7 @@ public class OrderService {
         userService.findUserById(userId);
         return orderRepository.findAllByUserId(userId)
                 .stream()
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
     public List<OrderResponseDto> getUserBuyOrders(Long userId)
@@ -58,7 +60,7 @@ public class OrderService {
         userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.BUY,userId)
                 .stream()
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
     public List<OrderResponseDto> getUserSellOrders(Long userId)
@@ -66,7 +68,7 @@ public class OrderService {
         userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.SELL,userId)
                 .stream()
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
 
@@ -74,22 +76,6 @@ public class OrderService {
         return orderRepository.findUserOfOrderById(order.getId());
     }
 
-    public OrderResponseDto getDto(Order order){
-        var tokenPrice = order.getTokenPrice();
-        var orderValue = tokenPrice.multiply(order.getQuantity());
-        return new OrderResponseDto(
-                order.getUser().getId(),
-                order.getId(),
-                order.getCreatedAt(),
-                order.getToken(),
-                order.getQuantity(),
-                order.getTokenPrice(),
-                orderValue,
-                order.getTransactionType(),
-                order.getOrderType(),
-                order.getClosedAt()
-        );
-    }
     public Optional<Order> findByUserAndOrderId(Long userId, Long orderId){
         return orderRepository.findByOrderAndUserId(userId, orderId);
     }

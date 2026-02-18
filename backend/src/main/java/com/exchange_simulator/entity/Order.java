@@ -3,6 +3,7 @@ package com.exchange_simulator.entity;
 import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.enums.TransactionType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,21 +13,9 @@ import java.time.Instant;
 
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "orders")
 public class Order extends Base{
-
-    public Order(String token, BigDecimal quantity, BigDecimal tokenPrice,
-                 BigDecimal orderValue, User user, TransactionType transactionType,
-                 OrderType orderType, Instant closedAt) {
-        this.token = token.toLowerCase();
-        this.quantity = quantity;
-        this.tokenPrice = tokenPrice;
-        this.orderValue = orderValue;
-        this.user = user;
-        this.transactionType = transactionType;
-        this.orderType = orderType;
-        this.closedAt = closedAt;
-    }
     @Getter
     @Column(nullable = false)
     private String token;

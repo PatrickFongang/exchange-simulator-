@@ -1,5 +1,6 @@
 package com.exchange_simulator.service;
 
+import com.exchange_simulator.Mapper.OrderMapper;
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.entity.Order;
@@ -16,11 +17,12 @@ import java.util.List;
 @Service
 public class MarketOrderService extends OrderService {
     public MarketOrderService(OrderRepository orderRepository,
-                                UserRepository userRepository,
-                                UserService userService,
-                                CryptoDataService cryptoDataService,
-                                SpotPositionService spotPositionService)
-    { super(orderRepository, userRepository, userService, cryptoDataService, spotPositionService); }
+                              UserRepository userRepository,
+                              UserService userService,
+                              CryptoDataService cryptoDataService,
+                              SpotPositionService spotPositionService,
+                              OrderMapper orderMapper)
+    { super(orderRepository, userRepository, userService, cryptoDataService, spotPositionService, orderMapper); }
     @Transactional
     public Order buy(OrderRequestDto dto, Long userId) {
         var data = prepareToBuy(dto, userId);
@@ -28,7 +30,7 @@ public class MarketOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var order = orderRepository.save (new Order(dto.token(), dto.quantity(), tokenPrice,
+        var order = orderRepository.save(new Order(dto.token().toLowerCase(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.BUY, OrderType.MARKET, Instant.now()));
 
         spotPositionService.handleBuy(order);
@@ -44,7 +46,7 @@ public class MarketOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        var order = new Order(dto.token(), dto.quantity(), tokenPrice,
+        var order = new Order(dto.token().toLowerCase(), dto.quantity(), tokenPrice,
                 orderValue, user, TransactionType.SELL, OrderType.MARKET, Instant.now());
 
         spotPositionService.handleSell(order);
@@ -59,7 +61,7 @@ public class MarketOrderService extends OrderService {
         return orderRepository.findAllByUserId(userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.MARKET))
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
     public List<OrderResponseDto> getUserBuyMarketOrders(Long userId)
@@ -68,7 +70,7 @@ public class MarketOrderService extends OrderService {
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.BUY, userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.MARKET))
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
     public List<OrderResponseDto> getUserSellMarketOrders(Long userId)
@@ -77,7 +79,7 @@ public class MarketOrderService extends OrderService {
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.SELL,userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.MARKET))
-                .map(this::getDto)
+                .map(orderMapper::toDto)
                 .toList();
     }
 }

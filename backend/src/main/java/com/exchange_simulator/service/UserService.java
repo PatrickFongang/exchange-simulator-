@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,8 +33,8 @@ public class UserService {
         }
         String password = passwordEncoder.encode(userData.password());
         String role = userData.role().toUpperCase();
-        return userRepository.save(new User(userData.username(), userData.email(),
-                password, role));
+        return userRepository.save(new User(userData.username(), userData.email(), password,
+                role, BigDecimal.valueOf(1000.0), Instant.now(), true));
     }
 
     public Optional<User> getUserById(Long id) {
@@ -44,16 +45,6 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public static UserResponseDto getDto(User user){
-        return new UserResponseDto(
-                user.getId(),
-                user.getUpdatedAt(),
-                user.getCreatedAt(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFunds()
-        );
-    }
     public User findUserByIdWithLock(Long userId) {
         return userRepository.findByIdWithLock(userId).orElseThrow(() -> new UserNotFoundException(userId));
     }

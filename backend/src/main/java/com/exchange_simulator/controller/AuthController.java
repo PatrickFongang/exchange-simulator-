@@ -1,5 +1,6 @@
 package com.exchange_simulator.controller;
 
+import com.exchange_simulator.Mapper.UserMapper;
 import com.exchange_simulator.dto.login.LoginRequestDto;
 import com.exchange_simulator.dto.user.UserRequestDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
@@ -28,17 +29,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
 
     @PostMapping("/registration")
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userData) {
         var user = userService.createUser(userData);
-        return ResponseEntity.ok(UserService.getDto(user));
+        return ResponseEntity.ok(userMapper.toDto(user));
     }
 
     @PostMapping("/login")
     public ResponseEntity<String> authUser(@RequestBody LoginRequestDto loginRequest, HttpServletRequest request) {
-        System.out.println("Username: " + loginRequest.username());
-        System.out.println("Password: " + loginRequest.password());
         try {
             UsernamePasswordAuthenticationToken token =
                     new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password());

@@ -16,17 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdWithLock(Long id);
 
     boolean existsByUsername(String username);
+
     boolean existsByEmail(String email);
-
-    @Transactional
-    @Modifying
-    @Query("update User u set u.username = :name where u.id = :id")
-    int updateUsernameById(Long id, String username);
-
-    @Transactional
-    @Modifying
-    @Query("update User u set u.email = :email where u.id = :id")
-    int updateEmailById (Long id, String email);
 
     Optional<User> findByUsername(String username);
 }

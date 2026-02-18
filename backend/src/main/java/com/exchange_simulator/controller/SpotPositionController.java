@@ -1,5 +1,6 @@
 package com.exchange_simulator.controller;
 
+import com.exchange_simulator.Mapper.SpotPositionMapper;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.security.CustomUserDetails;
 import com.exchange_simulator.service.SpotPositionService;
@@ -15,6 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SpotPositionController {
     private final SpotPositionService spotPositionService;
+    private final SpotPositionMapper spotPositionMapper;
 
     @GetMapping()
     public ResponseEntity<List<SpotPositionResponseDto>> getPortfolio(@AuthenticationPrincipal CustomUserDetails user)
@@ -25,7 +27,7 @@ public class SpotPositionController {
     @GetMapping("/{token}")
     public ResponseEntity<SpotPositionResponseDto> getSpotPosition(@PathVariable String token, @AuthenticationPrincipal CustomUserDetails user){
         return spotPositionService.findPositionByTokenUnlocked(user.getId(), token)
-                .map(spotPositionService::getDto)
+                .map(spotPositionMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
