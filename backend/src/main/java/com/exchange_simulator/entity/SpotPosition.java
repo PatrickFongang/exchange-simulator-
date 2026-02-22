@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name="spotPositions")
+@Table(name="spot_positions")
 @AllArgsConstructor
 @NoArgsConstructor
 public class SpotPosition extends Base{

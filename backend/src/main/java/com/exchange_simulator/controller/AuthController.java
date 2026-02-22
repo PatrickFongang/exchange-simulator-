@@ -5,6 +5,7 @@ import com.exchange_simulator.dto.auth.AuthRequestDto;
 import com.exchange_simulator.dto.user.UserRequestDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
 import com.exchange_simulator.security.JwtUtils;
+import com.exchange_simulator.service.BlacklistedTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import com.exchange_simulator.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -18,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.Map;
 
 @RestController
@@ -25,6 +27,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final UserService userService;
+    private final BlacklistedTokenService blacklistedTokenService;
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
@@ -52,15 +55,17 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
+    public ResponseEntity<Map<String,String>> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
 
-        if (session != null) {
-            session.invalidate();
+        if(authHeader != null && authHeader.startsWith("Bearer ")){
+            String token = authHeader.substring(7);
+            try{
+                Instant expiresAt = jwtUtils.extractExpiration(token).toInstant();
+                blacklistedTokenService.blacklistToken(token, expiresAt);
+            }catch(Exception e){}
         }
-
         SecurityContextHolder.clearContext();
-
-        return ResponseEntity.ok("Successful logout");
+        return ResponseEntity.ok(Map.of("message", "Successful logout"));
     }
 }

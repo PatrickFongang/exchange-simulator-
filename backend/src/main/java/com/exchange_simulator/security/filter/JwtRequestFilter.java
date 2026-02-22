@@ -5,6 +5,7 @@ import com.exchange_simulator.exceptionHandler.exceptions.auth.AuthException;
 import com.exchange_simulator.mapper.ErrorMapper;
 import com.exchange_simulator.security.CustomUserDetails;
 import com.exchange_simulator.security.JwtUtils;
+import com.exchange_simulator.service.BlacklistedTokenService;
 import com.exchange_simulator.service.CustomUserDetailsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -27,9 +28,10 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
-    final private CustomUserDetailsService userDetailsService;
-    final private JwtUtils jwtutils;
-    final private ErrorMapper errorMapper;
+    private final CustomUserDetailsService userDetailsService;
+    private final BlacklistedTokenService blacklistedTokenService;
+    private final JwtUtils jwtutils;
+    private final ErrorMapper errorMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -40,6 +42,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
+                if (blacklistedTokenService.isTokenBlacklisted(token)) {
+                    throw new AuthException("Token has been revoked. Please log in again.");
+                }
                 username = jwtutils.extractUsername(token);
             }
 
