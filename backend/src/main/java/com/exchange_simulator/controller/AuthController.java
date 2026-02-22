@@ -8,7 +8,6 @@ import com.exchange_simulator.security.JwtUtils;
 import com.exchange_simulator.service.BlacklistedTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import com.exchange_simulator.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @RestController

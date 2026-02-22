@@ -12,12 +12,12 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select u from User u where u.id = :id")
+    @Query("select u from User u where u.id = :id and u.isActive = true")
     Optional<User> findByIdWithLock(Long id);
-
-    boolean existsByUsername(String username);
-
-    boolean existsByEmail(String email);
-
+    Optional<User> findByIdAndIsActiveTrue(Long id);
+    boolean existsByUsernameAndIsActiveTrue(String username);
+    boolean existsByEmailAndIsActiveTrue(String email);
+    @Query("select u from User u where u.username = :username and u.isActive = true")
     Optional<User> findByUsername(String username);
+
 }

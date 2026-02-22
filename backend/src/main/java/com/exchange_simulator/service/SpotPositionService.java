@@ -9,6 +9,7 @@ import com.exchange_simulator.exceptionHandler.exceptions.exchange.NotEnoughReso
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.SpotPositionNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
+import com.exchange_simulator.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,6 @@ public class SpotPositionService {
     private final SpotPositionRepository spotPositionRepository;
     private final OrderRepository orderRepository;
     private final SpotPositionMapper spotPositionMapper;
-
     public void handleBuy(Order order) {
 
         var position = handlePosition(order.getToken(), order.getQuantity(), order.getTokenPrice(), order.getUser());

@@ -5,6 +5,7 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;
+import com.exchange_simulator.repository.UserRepository;
 import com.exchange_simulator.service.OrderService;
 import com.exchange_simulator.service.SpotPositionService;
 import com.exchange_simulator.service.UserService;
@@ -24,6 +25,8 @@ public class AdminController {
     final private OrderService orderService;
     final private SpotPositionService spotPositionService;
     final private UserMapper userMapper;
+    private final UserRepository userRepository;
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping()
     public ResponseEntity<List<UserResponseDto>> getUsers(){
@@ -68,5 +71,14 @@ public class AdminController {
         userService.updateFunds(user, amount);
 
         return ResponseEntity.ok(userMapper.toDto(user));
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserResponseDto> deleteUser(
+            @PathVariable("id") Long id
+    ){
+        var user = userService.getUserById(id)
+                .orElseThrow(() ->new UserNotFoundException(id));
+        return ResponseEntity.ok(userMapper.toDto(userService.deleteUser(user)));
     }
 }

@@ -24,20 +24,19 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public User createUser(UserRequestDto userData) {
-        if (userRepository.existsByUsername(userData.username())) {
+        if (userRepository.existsByUsernameAndIsActiveTrue(userData.username())) {
             throw new UserAlreadyExistsException("User with username '" + userData.username() + "' already exists");
         }
-        if (userRepository.existsByEmail(userData.email())) {
+        if (userRepository.existsByEmailAndIsActiveTrue(userData.email())) {
             throw new UserAlreadyExistsException("User with email '" + userData.email() + "' already exists");
         }
         String password = passwordEncoder.encode(userData.password());
-        String role = userData.role().toUpperCase();
         return userRepository.save(new User(userData.username(), userData.email(), password,
-                role, BigDecimal.valueOf(1000.0), Instant.now(), true));
+                "ROLE_USER", BigDecimal.valueOf(1000.0), Instant.now(), true));
     }
 
     public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+        return userRepository.findByIdAndIsActiveTrue(id);
     }
 
     public List<User> getUsers() {
@@ -49,7 +48,7 @@ public class UserService {
     }
 
     public User findUserById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        return userRepository.findByIdAndIsActiveTrue(userId).orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     public void updateFunds(User user, BigDecimal amount) {
@@ -59,5 +58,10 @@ public class UserService {
             user.setFunds(user.getFunds().add(amount));
         }
         userRepository.save(user);
+    }
+
+    public User deleteUser(User user) {
+        user.setIsActive(false);
+        return userRepository.save(user);
     }
 }
